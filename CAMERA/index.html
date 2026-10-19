@@ -1,0 +1,745 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>Camera ID</title>
+
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: Arial, sans-serif;
+        }
+
+        body {
+            min-height: 100vh;
+            background: linear-gradient(135deg, #111827, #1e293b);
+            color: white;
+            padding: 30px;
+        }
+
+        .container {
+            max-width: 1000px;
+            margin: auto;
+        }
+
+        header {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        header h1 {
+            font-size: 36px;
+            margin-bottom: 8px;
+        }
+
+        header p {
+            color: #cbd5e1;
+        }
+
+        .painel {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 25px;
+        }
+
+        .card {
+            background: rgba(15, 23, 42, 0.95);
+            border: 1px solid #334155;
+            border-radius: 18px;
+            padding: 20px;
+            box-shadow: 0 15px 35px rgba(0, 0, 0, 0.3);
+        }
+
+        .card h2 {
+            margin-bottom: 15px;
+            font-size: 20px;
+        }
+
+        .camera-area {
+            width: 100%;
+            aspect-ratio: 16 / 10;
+            background: #020617;
+            border-radius: 14px;
+            overflow: hidden;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            border: 2px solid #475569;
+        }
+
+        video {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .camera-off {
+            color: #94a3b8;
+            text-align: center;
+            padding: 20px;
+        }
+
+        label {
+            display: block;
+            margin-top: 18px;
+            margin-bottom: 8px;
+            color: #cbd5e1;
+        }
+
+        input {
+            width: 100%;
+            padding: 13px;
+            border-radius: 10px;
+            border: 1px solid #475569;
+            background: #0f172a;
+            color: white;
+            outline: none;
+            font-size: 16px;
+        }
+
+        input:focus {
+            border-color: #38bdf8;
+        }
+
+        .botoes {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            margin-top: 20px;
+        }
+
+        button {
+            flex: 1;
+            min-width: 130px;
+            padding: 13px 18px;
+            border: none;
+            border-radius: 10px;
+            cursor: pointer;
+            font-size: 15px;
+            font-weight: bold;
+            transition: 0.2s;
+        }
+
+        button:hover {
+            transform: translateY(-2px);
+            opacity: 0.9;
+        }
+
+        .btn-ligar {
+            background: #22c55e;
+            color: white;
+        }
+
+        .btn-desligar {
+            background: #ef4444;
+            color: white;
+        }
+
+        .btn-capturar {
+            background: #0ea5e9;
+            color: white;
+        }
+
+        .btn-limpar {
+            background: #64748b;
+            color: white;
+        }
+
+        .status {
+            margin-top: 15px;
+            padding: 12px;
+            border-radius: 10px;
+            background: #1e293b;
+            color: #cbd5e1;
+            text-align: center;
+        }
+
+        .mensagem {
+            margin-top: 15px;
+            padding: 12px;
+            border-radius: 10px;
+            display: none;
+            text-align: center;
+        }
+
+        .erro {
+            background: #450a0a;
+            color: #fecaca;
+            border: 1px solid #7f1d1d;
+        }
+
+        .sucesso {
+            background: #052e16;
+            color: #bbf7d0;
+            border: 1px solid #166534;
+        }
+
+        .resultado {
+            width: 100%;
+            min-height: 300px;
+            background: #020617;
+            border-radius: 14px;
+            border: 2px solid #475569;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            overflow: hidden;
+        }
+
+        canvas {
+            width: 100%;
+            height: auto;
+            display: none;
+        }
+
+        .sem-imagem {
+            color: #64748b;
+            text-align: center;
+            padding: 20px;
+        }
+
+        .info {
+            margin-top: 15px;
+            color: #94a3b8;
+            font-size: 14px;
+            line-height: 1.6;
+        }
+
+        @media (max-width: 800px) {
+            body {
+                padding: 15px;
+            }
+
+            .painel {
+                grid-template-columns: 1fr;
+            }
+
+            header h1 {
+                font-size: 28px;
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+    <div class="container">
+
+        <header>
+            <h1>📷 Camera ID</h1>
+            <p>Capture uma imagem e gere uma identificação visual</p>
+        </header>
+
+        <div class="painel">
+
+            <!-- CÂMERA -->
+            <div class="card">
+
+                <h2>📹 Câmera</h2>
+
+                <div class="camera-area">
+
+                    <video id="video" autoplay playsinline></video>
+
+                    <div id="cameraOff" class="camera-off">
+                        📷<br><br>
+                        A câmera está desligada.
+                    </div>
+
+                </div>
+
+                <label for="identificacao">
+                    Identificação da captura
+                </label>
+
+                <input
+                    type="text"
+                    id="identificacao"
+                    placeholder="Ex: João - Projeto Camera ID"
+                    maxlength="50"
+                >
+
+                <div class="botoes">
+
+                    <button
+                        class="btn-ligar"
+                        id="btnLigar">
+                        ▶ Ligar câmera
+                    </button>
+
+                    <button
+                        class="btn-desligar"
+                        id="btnDesligar">
+                        ⏹ Desligar câmera
+                    </button>
+
+                    <button
+                        class="btn-capturar"
+                        id="btnCapturar">
+                        📸 Capturar
+                    </button>
+
+                </div>
+
+                <div id="status" class="status">
+                    Câmera desligada
+                </div>
+
+                <div id="mensagem" class="mensagem"></div>
+
+            </div>
+
+
+            <!-- RESULTADO -->
+            <div class="card">
+
+                <h2>🖼️ Resultado</h2>
+
+                <div class="resultado">
+
+                    <div id="semImagem" class="sem-imagem">
+                        A imagem capturada aparecerá aqui.
+                    </div>
+
+                    <canvas id="canvas"></canvas>
+
+                </div>
+
+                <div class="botoes">
+
+                    <button
+                        class="btn-limpar"
+                        id="btnLimpar">
+                        🗑 Limpar imagem
+                    </button>
+
+                </div>
+
+                <div class="info">
+                    <strong>Efeito aplicado:</strong>
+                    Escala de cinza + contraste.
+
+                    <br>
+
+                    <strong>Informações:</strong>
+                    A identificação, data e hora são inseridas diretamente
+                    na imagem através do Canvas.
+                </div>
+
+            </div>
+
+        </div>
+
+    </div>
+
+
+    <script>
+
+        // ==========================================
+        // ELEMENTOS DA INTERFACE
+        // ==========================================
+
+        const video = document.getElementById("video");
+        const canvas = document.getElementById("canvas");
+        const ctx = canvas.getContext("2d");
+
+        const identificacao =
+            document.getElementById("identificacao");
+
+        const btnLigar =
+            document.getElementById("btnLigar");
+
+        const btnDesligar =
+            document.getElementById("btnDesligar");
+
+        const btnCapturar =
+            document.getElementById("btnCapturar");
+
+        const btnLimpar =
+            document.getElementById("btnLimpar");
+
+        const status =
+            document.getElementById("status");
+
+        const mensagem =
+            document.getElementById("mensagem");
+
+        const cameraOff =
+            document.getElementById("cameraOff");
+
+        const semImagem =
+            document.getElementById("semImagem");
+
+
+        // ==========================================
+        // STREAM DA CÂMERA
+        // ==========================================
+
+        let stream = null;
+
+
+        // ==========================================
+        // FUNÇÃO PARA MOSTRAR MENSAGEM
+        // ==========================================
+
+        function mostrarMensagem(texto, tipo) {
+
+            mensagem.textContent = texto;
+
+            mensagem.className = "mensagem " + tipo;
+
+            mensagem.style.display = "block";
+
+            setTimeout(() => {
+                mensagem.style.display = "none";
+            }, 4000);
+        }
+
+
+        // ==========================================
+        // LIGAR CÂMERA
+        // ==========================================
+
+        async function ligarCamera() {
+
+            try {
+
+                // Se já existir uma câmera ligada,
+                // primeiro encerramos o stream anterior.
+                if (stream) {
+                    desligarCamera();
+                }
+
+                stream = await navigator.mediaDevices.getUserMedia({
+                    video: true,
+                    audio: false
+                });
+
+                video.srcObject = stream;
+
+                video.style.display = "block";
+                cameraOff.style.display = "none";
+
+                status.textContent = "🟢 Câmera ligada";
+
+                mostrarMensagem(
+                    "Câmera ativada com sucesso!",
+                    "sucesso"
+                );
+
+            } catch (erro) {
+
+                console.error(erro);
+
+                video.style.display = "none";
+                cameraOff.style.display = "block";
+
+                status.textContent =
+                    "🔴 Não foi possível acessar a câmera";
+
+                if (erro.name === "NotAllowedError") {
+
+                    mostrarMensagem(
+                        "Permissão para usar a câmera foi negada. Autorize o acesso nas configurações do navegador.",
+                        "erro"
+                    );
+
+                } else if (erro.name === "NotFoundError") {
+
+                    mostrarMensagem(
+                        "Nenhuma câmera foi encontrada neste dispositivo.",
+                        "erro"
+                    );
+
+                } else {
+
+                    mostrarMensagem(
+                        "Não foi possível acessar a câmera.",
+                        "erro"
+                    );
+                }
+            }
+        }
+
+
+        // ==========================================
+        // DESLIGAR CÂMERA
+        // ==========================================
+
+        function desligarCamera() {
+
+            if (stream) {
+
+                // IMPORTANTE:
+                // encerra TODAS as tracks da câmera.
+                stream.getTracks().forEach(track => {
+                    track.stop();
+                });
+
+                stream = null;
+            }
+
+            video.srcObject = null;
+
+            video.style.display = "none";
+            cameraOff.style.display = "block";
+
+            status.textContent = "🔴 Câmera desligada";
+
+            mostrarMensagem(
+                "Câmera desligada corretamente.",
+                "sucesso"
+            );
+        }
+
+
+        // ==========================================
+        // CAPTURAR IMAGEM
+        // ==========================================
+
+        function capturarImagem() {
+
+            // Verifica se a câmera realmente está disponível.
+            if (!stream || video.readyState < 2) {
+
+                mostrarMensagem(
+                    "Ligue a câmera antes de realizar uma captura.",
+                    "erro"
+                );
+
+                return;
+            }
+
+
+            // Verifica se o usuário informou uma identificação.
+            let nome = identificacao.value.trim();
+
+            if (nome === "") {
+
+                mostrarMensagem(
+                    "Digite uma identificação para a captura.",
+                    "erro"
+                );
+
+                identificacao.focus();
+
+                return;
+            }
+
+
+            // Define o tamanho do Canvas
+            // de acordo com o vídeo.
+            canvas.width = video.videoWidth;
+            canvas.height = video.videoHeight;
+
+
+            // Desenha a imagem original.
+            ctx.drawImage(
+                video,
+                0,
+                0,
+                canvas.width,
+                canvas.height
+            );
+
+
+            // ==========================================
+            // EFEITO VISUAL
+            // ESCALA DE CINZA + CONTRASTE
+            // ==========================================
+
+            const imagem =
+                ctx.getImageData(
+                    0,
+                    0,
+                    canvas.width,
+                    canvas.height
+                );
+
+            const dados = imagem.data;
+
+            for (let i = 0; i < dados.length; i += 4) {
+
+                const vermelho = dados[i];
+                const verde = dados[i + 1];
+                const azul = dados[i + 2];
+
+                // Escala de cinza
+                let cinza =
+                    0.299 * vermelho +
+                    0.587 * verde +
+                    0.114 * azul;
+
+                // Contraste
+                const fator = 1.25;
+
+                cinza =
+                    fator * (cinza - 128) + 128;
+
+                cinza =
+                    Math.max(0, Math.min(255, cinza));
+
+                dados[i] = cinza;
+                dados[i + 1] = cinza;
+                dados[i + 2] = cinza;
+            }
+
+            ctx.putImageData(imagem, 0, 0);
+
+
+            // ==========================================
+            // DATA E HORA
+            // ==========================================
+
+            const agora = new Date();
+
+            const data =
+                agora.toLocaleDateString("pt-BR");
+
+            const hora =
+                agora.toLocaleTimeString("pt-BR");
+
+
+            // ==========================================
+            // ÁREA DE IDENTIFICAÇÃO
+            // ==========================================
+
+            const alturaFaixa = 90;
+
+            ctx.fillStyle = "rgba(0, 0, 0, 0.75)";
+
+            ctx.fillRect(
+                0,
+                canvas.height - alturaFaixa,
+                canvas.width,
+                alturaFaixa
+            );
+
+
+            // ==========================================
+            // TEXTO DA IDENTIFICAÇÃO
+            // ==========================================
+
+            ctx.fillStyle = "#ffffff";
+
+            ctx.font =
+                "bold 24px Arial";
+
+            ctx.fillText(
+                "ID: " + nome,
+                25,
+                canvas.height - 52
+            );
+
+
+            // ==========================================
+            // DATA E HORA NA IMAGEM
+            // ==========================================
+
+            ctx.font =
+                "18px Arial";
+
+            ctx.fillText(
+                "Captura: " + data + " às " + hora,
+                25,
+                canvas.height - 22
+            );
+
+
+            // Mostra Canvas
+            canvas.style.display = "block";
+
+            semImagem.style.display = "none";
+
+
+            mostrarMensagem(
+                "Imagem capturada e processada com sucesso!",
+                "sucesso"
+            );
+        }
+
+
+        // ==========================================
+        // LIMPAR IMAGEM
+        // ==========================================
+
+        function limparImagem() {
+
+            ctx.clearRect(
+                0,
+                0,
+                canvas.width,
+                canvas.height
+            );
+
+            canvas.style.display = "none";
+
+            semImagem.style.display = "block";
+
+            mostrarMensagem(
+                "Imagem removida.",
+                "sucesso"
+            );
+        }
+
+
+        // ==========================================
+        // EVENTOS DOS BOTÕES
+        // ==========================================
+
+        btnLigar.addEventListener(
+            "click",
+            ligarCamera
+        );
+
+        btnDesligar.addEventListener(
+            "click",
+            desligarCamera
+        );
+
+        btnCapturar.addEventListener(
+            "click",
+            capturarImagem
+        );
+
+        btnLimpar.addEventListener(
+            "click",
+            limparImagem
+        );
+
+
+        // ==========================================
+        // SEGURANÇA
+        // DESLIGA A CÂMERA AO SAIR DA PÁGINA
+        // ==========================================
+
+        window.addEventListener(
+            "beforeunload",
+            () => {
+
+                if (stream) {
+
+                    stream.getTracks().forEach(
+                        track => track.stop()
+                    );
+
+                }
+
+            }
+        );
+
+
+        // ==========================================
+        // ESTADO INICIAL
+        // ==========================================
+
+        video.style.display = "none";
+
+    </script>
+
+</body>
+</html>
